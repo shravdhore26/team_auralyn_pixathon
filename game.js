@@ -9,7 +9,7 @@
 
   // Game Constants
   const TOTAL_ROUNDS = 8;
-  const TOTAL_TIME_SECONDS = 25.0;
+  const TOTAL_TIME_SECONDS = 60.0;
   const RING_CIRCUMFERENCE = 2 * Math.PI * 140; // r = 140 -> 879.64
 
   // State
@@ -541,7 +541,7 @@
   // ==========================================================================
 
   function handleTimeExpired() {
-    handleFailure('TIME EXPIRED', 'Human reaction latency exceeded 25 seconds threshold.');
+    handleFailure('TIME EXPIRED', 'Human reaction latency exceeded 60 seconds threshold.');
   }
 
   function handleFailure(title, description) {
