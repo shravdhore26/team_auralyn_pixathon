@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Press Under Pressure - Human Verification CAPTCHA</title>
+  <meta name="description" content="High-stakes satirical CAPTCHA test: 8 rounds, 25 seconds, deterministic validation, Rat and Moon overrides. Prove you are human under pressure.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-badge">Stitch v2.6</span>
+        <h1 class="brand-title">PRESS <span>UNDER PRESSURE</span></h1>
+      </div>
+      <div class="top-actions">
+        <button id="help-btn" class="icon-btn" title="How to play (H)" aria-label="Tutorial">❓</button>
+        <button id="mute-btn" class="icon-btn" title="Toggle Sound (M)" aria-label="Sound Toggle">🔊</button>
+      </div>
+    </header>
+
+    <!-- Heads-Up Display (HUD) -->
+    <section class="hud-bar" aria-label="Game Status">
+      <div class="hud-stat">
+        <span class="hud-label">Challenge</span>
+        <div class="hud-value" id="round-number">1 / 8</div>
+        <div class="round-track" id="round-pips">
+          <!-- Dynamically populated with 8 pips -->
+        </div>
+      </div>
+
+      <div class="hud-stat" style="text-align: right;">
+        <span class="hud-label">Time Remaining</span>
+        <div class="hud-value timer" id="timer-display">25.00s</div>
+      </div>
+    </section>
+
+    <!-- Central Challenge Arena -->
+    <main class="arena">
+      <div class="circle-wrapper">
+        <!-- Animated SVG Countdown Ring -->
+        <svg class="countdown-svg" id="countdown-svg" viewBox="0 0 300 300">
+          <circle 
+            class="ring-bg" 
+            cx="150" 
+            cy="150" 
+            r="140" 
+            fill="none" 
+            stroke-width="8" 
+          />
+          <circle 
+            class="ring-progress mint" 
+            id="ring-progress" 
+            cx="150" 
+            cy="150" 
+            r="140" 
+            fill="none" 
+            stroke-width="8" 
+          />
+        </svg>
+
+        <!-- Large Interactive Circular Button -->
+        <button 
+          id="challenge-button" 
+          class="challenge-circle-btn" 
+          type="button" 
+          aria-label="Challenge Button: Tap required number of times"
+        >
+          <!-- Top: Challenge Pill & Instruction Inside Button -->
+          <div class="circle-top-header">
+            <span class="challenge-pill" id="challenge-pill">INITIALIZING...</span>
+            <p class="instruction-text" id="instruction-text">Tap to begin</p>
+          </div>
+
+          <!-- Center: Dynamic Symbol Stage Inside Button -->
+          <div class="symbol-stage" id="symbol-stage">
+            <!-- Procedural shapes, stars, icons rendered here -->
+          </div>
+
+          <!-- Bottom: Tap Status (Target count is NEVER revealed) -->
+          <div class="circle-bottom-feedback">
+            <span class="tap-tally" id="tap-tally">Taps: 0</span>
+            <div class="tap-dots" id="tap-dots"></div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Action Controls Bar -->
+      <div class="controls-bar">
+        <button id="confirm-btn" class="btn-confirm" type="button">
+          Confirm Round <kbd>ENTER</kbd>
+        </button>
+
+        <div class="controls-sub">
+          <button id="reset-taps-btn" class="btn-text-subtle" type="button">
+            ↺ Reset Taps <kbd>⌫</kbd>
+          </button>
+          <span class="hint-pill">SPACE = TAP</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Empty footer spacer for balanced flex layout -->
+    <footer style="height: 1px; width: 100%;"></footer>
+  </div>
+
+  <!-- ==========================================================================
+       MODALS: Start / Tutorial, Failure, Victory, Help
+       ========================================================================== -->
+
+  <!-- 1. Start / Tutorial Screen Overlay -->
+  <div id="start-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon">⚡</div>
+        <h2 class="modal-title">HUMAN AUTHENTICATION</h2>
+        <p class="modal-subtitle">Biometric Turing Test: 8 Rounds. 25 Seconds Total. Zero margin for error.</p>
+      </div>
+
+      <div class="tutorial-rules">
+        <div class="rule-row">
+          <span class="rule-tag tag-time">25s Total</span>
+          <span>One timer across all 8 rounds. You must average ~3 seconds per challenge.</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-shape">Tap Target</span>
+          <span>Tap the big circle for each matching symbol, then hit <strong>Confirm</strong>.</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-override">⚠️ Rat Override</span>
+          <span>If a <strong>Rat (🐀)</strong> appears anywhere, ignore all instructions: <strong>Tap 0 times and Confirm!</strong></span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-override">🌙 Moon Override</span>
+          <span>If a <strong>Crescent Moon (🌙)</strong> appears, cosmic flux triggers: <strong>Tap exactly 3 times!</strong></span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-shape">Sharp Edges</span>
+          <span>Triangles = 3 vertices, Squares = 4 vertices, Circles = 0 vertices.</span>
+        </div>
+      </div>
+
+      <button id="start-btn" class="btn-cta mint" type="button">
+        INITIALIZE CHALLENGE <kbd>SPACE</kbd>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. Failure Screen Overlay -->
+  <div id="fail-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon">🚫</div>
+        <h2 class="modal-title coral">VERIFICATION FAILED</h2>
+        <p class="modal-subtitle" id="fail-reason">Your biometric reflex was deemed non-human.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-box-label">Round Reached</span>
+          <span class="stat-box-value" id="fail-round">Round 1</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-label">Survival Time</span>
+          <span class="stat-box-value" id="fail-time">0.00s</span>
+        </div>
+      </div>
+
+      <button id="retry-btn" class="btn-cta violet" type="button">
+        RE-AUTHENTICATE <kbd>R / ENTER</kbd>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Success Screen Overlay -->
+  <div id="success-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon">🎉</div>
+        <h2 class="modal-title mint">HUMAN CONFIRMED</h2>
+        <p class="modal-subtitle">You have conquered the Pressure Engine and defeated the bot filter.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-box-label">Total Time</span>
+          <span class="stat-box-value" id="success-time">18.42s</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-label">Reflex Tier</span>
+          <span class="stat-box-value" id="success-rank">Tachyon Reflexes</span>
+        </div>
+      </div>
+
+      <button id="play-again-btn" class="btn-cta mint" type="button">
+        PLAY AGAIN <kbd>R / ENTER</kbd>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Quick Help Modal -->
+  <div id="tutorial-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon">📖</div>
+        <h2 class="modal-title">RULES & SHORTCUTS</h2>
+      </div>
+
+      <div class="tutorial-rules">
+        <div class="rule-row">
+          <span class="rule-tag tag-time">RAT RULE</span>
+          <span>🐀 = Always tap <strong>0 times</strong> and confirm immediately!</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-time">MOON RULE</span>
+          <span>🌙 = Gravitational shift: always tap <strong>3 times</strong>!</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-shape">STARS</span>
+          <span>Distinguish between 5-point stars (★) and 4-point sparkles (✦).</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-tag tag-shape">KEYS</span>
+          <span><strong>SPACE</strong>: Tap circle &nbsp;|&nbsp; <strong>ENTER</strong>: Confirm &nbsp;|&nbsp; <strong>⌫</strong>: Reset taps &nbsp;|&nbsp; <strong>R</strong>: Restart &nbsp;|&nbsp; <strong>M</strong>: Mute</span>
+        </div>
+      </div>
+
+      <button id="close-tutorial-btn" class="btn-cta violet" type="button">
+        RESUME
+      </button>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
